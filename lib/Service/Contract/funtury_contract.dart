@@ -4,7 +4,7 @@ import 'package:web3dart/web3dart.dart';
 
 class FunturyContract {
   static EthereumAddress contractAddress =
-      EthereumAddress.fromHex("0x47Ef26eb26BC37e0e863bfd99C425250532894fE");
+      EthereumAddress.fromHex("0xC60DbF9B9A133E80E7eBb150e035801Bdf0FAA77");
   static DeployedContract funturyContract = DeployedContract(
     ContractAbi.fromJson(
         jsonEncode(ContractAbiJson.funturyContractAbi), 'FunturyContract'),
@@ -163,12 +163,13 @@ class MarketTransferRecordEvent {
   final EthereumAddress from;
   final EthereumAddress to;
   final EthereumAddress marketContract;
+  final String marketTitle;
   final bool isYes;
   final BigInt amount;
   final BigInt totalPrice;
   final DateTime recordTime;
 
-  MarketTransferRecordEvent(this.from, this.to, this.marketContract, this.isYes,
+  MarketTransferRecordEvent(this.from, this.to, this.marketContract, this.marketTitle, this.isYes,
       this.amount, this.totalPrice, this.recordTime);
 
   static MarketTransferRecordEvent fromEventLog(FilterEvent event) {
@@ -178,14 +179,15 @@ class MarketTransferRecordEvent {
     final from = decodedData[0] as EthereumAddress;
     final to = decodedData[1] as EthereumAddress;
     final marketContract = decodedData[2] as EthereumAddress;
-    final isYes = decodedData[3] as bool;
-    final amount = decodedData[4] as BigInt;
-    final totalPrice = decodedData[5] as BigInt;
+    final marketTitle = decodedData[3] as String;
+    final isYes = decodedData[4] as bool;
+    final amount = decodedData[5] as BigInt;
+    final totalPrice = decodedData[6] as BigInt;
     final recordTime = DateTime.fromMillisecondsSinceEpoch(
-        (decodedData[6] as BigInt).toInt() * 1000);
+        (decodedData[7] as BigInt).toInt() * 1000);
 
     return MarketTransferRecordEvent(
-        from, to, marketContract, isYes, amount, totalPrice, recordTime);
+        from, to, marketContract, marketTitle,isYes, amount, totalPrice, recordTime);
   }
 }
 

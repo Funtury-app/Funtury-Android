@@ -81,9 +81,11 @@ class WalletPageController {
       debugPrint("WalletPageController getAllUserPosition error: $e");
     }
 
-    setState(() {
-      positionLoading = false;
-    });
+    if (context.mounted) {
+      setState(() {
+        positionLoading = false;
+      });
+    }
   }
 
   Future<void> claimedFreeToken() async {

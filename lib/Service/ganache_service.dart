@@ -16,11 +16,11 @@ import 'package:web3dart/web3dart.dart';
 
 class GanacheService {
   static const String _rpcUrl =
-      "https://2a8f-2001-b400-e100-e64a-e1c4-8c0-7309-8253.ngrok-free.app";
+      "https://b9bd-2001-b400-e111-4baf-d001-2f94-f247-cece.ngrok-free.app";
   static final EthPrivateKey _privateKey = EthPrivateKey.fromHex(
-      "0xc20a228ce44302bfb2e42038b4e37983c46ca0b939050be9a3c9d34a15a17445");
+      "0xd23d3ca92bbf14388b9d62768b1893821dff50fb09f63a0164491a014e92a9cf");
   static final EthereumAddress userAddress =
-      EthereumAddress.fromHex("0x37DdA0C7C92029Bc8787eA418fD7e0Eda7Fa2e6A");
+      EthereumAddress.fromHex("0x761b900B786BFD78848068176C1FFE6968aF5a3D");
 
   late Client httpClient;
   late Web3Client ganacheClient;

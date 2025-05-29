@@ -9,11 +9,13 @@ import 'package:funtury/assets_path.dart';
 class LazyLoadPage extends StatefulWidget {
   final Widget Function() builder;
   final bool shouldBuild;
+  final bool forceRebuild;
 
   const LazyLoadPage({
     super.key,
     required this.builder,
     required this.shouldBuild,
+    this.forceRebuild = false,
   });
 
   @override
@@ -27,6 +29,10 @@ class _LazyLoadPageState extends State<LazyLoadPage> {
   Widget build(BuildContext context) {
     if (!widget.shouldBuild) {
       return Container();
+    }
+
+    if(widget.forceRebuild){
+      return widget.builder();
     }
 
     _cached ??= widget.builder();
@@ -124,7 +130,8 @@ class _HomepageState extends State<Homepage> {
                           ),
                           LazyLoadPage(
                             shouldBuild: homePageController.hasVisited[3],
-                            builder: () => WalletPage(),
+                            forceRebuild: true,
+                            builder: () => WalletPage(key: UniqueKey()),
                           ),
                         ],
                       ),
