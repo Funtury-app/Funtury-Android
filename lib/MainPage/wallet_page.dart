@@ -157,7 +157,7 @@ class _WalletPageState extends State<WalletPage> {
                                 children: [
                                   Expanded(
                                       child: Container(
-                                        padding: const EdgeInsets.only(left: 10.0),
+                                    padding: const EdgeInsets.only(left: 10.0),
                                     alignment: Alignment.centerLeft,
                                     child: Text(
                                       "Stocks",
@@ -314,21 +314,23 @@ class _WalletPageState extends State<WalletPage> {
                                                   children: [
                                                     for (var orderInfo
                                                         in walletPageController
-                                                            .userOrderHistory) ...[
-                                                      Container(
-                                                          margin:
-                                                              const EdgeInsets
-                                                                  .symmetric(
-                                                                  vertical:
-                                                                      10.0),
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .symmetric(
-                                                                  horizontal:
-                                                                      5.0),
-                                                          child: OrderCard(
-                                                              orderInfo:
-                                                                  orderInfo))
+                                                            .userOrderHistory.reversed) ...[
+                                                      if (orderInfo.status !=
+                                                          OrderStatus.cancelled)
+                                                        Container(
+                                                            margin:
+                                                                const EdgeInsets
+                                                                    .symmetric(
+                                                                    vertical:
+                                                                        10.0),
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .symmetric(
+                                                                    horizontal:
+                                                                        5.0),
+                                                            child: OrderCard(
+                                                                orderInfo:
+                                                                    orderInfo))
                                                     ]
                                                   ],
                                                 ),

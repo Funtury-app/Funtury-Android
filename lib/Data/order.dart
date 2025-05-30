@@ -20,8 +20,8 @@ class Order {
 
   Map<String, dynamic> get toJson{
     return {
-      "user_address": userAddress.hex,
-      "market_address": marketAddress.hex,
+      "user_address": userAddress.hexEip55,
+      "market_address": marketAddress.hexEip55,
       "outcome": outcome.outcome,
       "price": price,
       "amount": amount,
