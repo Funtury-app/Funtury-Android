@@ -16,11 +16,11 @@ import 'package:web3dart/web3dart.dart';
 
 class GanacheService {
   static const String _rpcUrl =
-      "https://b9bd-2001-b400-e111-4baf-d001-2f94-f247-cece.ngrok-free.app";
+      "https://67c0-42-70-128-240.ngrok-free.app";
   static final EthPrivateKey _privateKey = EthPrivateKey.fromHex(
-      "0xd23d3ca92bbf14388b9d62768b1893821dff50fb09f63a0164491a014e92a9cf");
+      "0xbda582304ad6b97f303cebc9cef6ebc02c2055413058de5031745da72dc68cdf");
   static final EthereumAddress userAddress =
-      EthereumAddress.fromHex("0x761b900B786BFD78848068176C1FFE6968aF5a3D");
+      EthereumAddress.fromHex("0x75D7B871b54483825EBba67aFB54bC7eFAF48944");
 
   late Client httpClient;
   late Web3Client ganacheClient;
@@ -150,7 +150,7 @@ class GanacheService {
         address: FunturyContract.contractAddress,
         topics: [
           [
-            bytesToHex(FunturyContract.tokensClaimedEvent.signature,
+            bytesToHex(FunturyContract.tokenClaimedEvent.signature,
                 include0x: true)
           ],
         ],
@@ -161,7 +161,7 @@ class GanacheService {
       final logs = await ganacheClient.getLogs(filter);
 
       for (var log in logs) {
-        final decodedLog = TokensClaimedEvent.fromEventLog(log);
+        final decodedLog = TokenClaimedEvent.fromEventLog(log);
 
         data.add(decodedLog.user);
 

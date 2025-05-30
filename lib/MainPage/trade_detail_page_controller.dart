@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:funtury/Data/event_detail.dart';
+import 'package:funtury/Data/order.dart';
+import 'package:funtury/Data/user_transfer_record.dart';
 import 'package:funtury/Data/yes_no_transaction.dart';
+import 'package:funtury/Service/Path/orders_path.dart';
 import 'package:funtury/Service/ganache_service.dart';
+import 'package:funtury/Service/network.dart';
 import 'package:reown_appkit/modal/pages/preview_send/utils.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 
@@ -54,6 +58,7 @@ class TradeDetailPageController {
 
   int? userYesPosition;
   int? userNoPosition;
+  double? userBalance;
 
   Future<void> init() async {
     amountTextController.text = amount.toString();
@@ -90,14 +95,15 @@ class TradeDetailPageController {
       //     },
       //     eventDetail = EventDetail.initFromData(data);
       // await Future.delayed(const Duration(seconds: 2));
-      if (eventDetail.marketState == MarketState.resolved &&
-          userYesPosition == null &&
-          userNoPosition == null) {
+      if (userYesPosition == null && userNoPosition == null) {
         await ganacheService.getUserPosition(marketAddress).then((value) {
           userYesPosition = value.$1.toInt();
           userNoPosition = value.$2.toInt();
         });
       }
+
+      userBalance ??=
+          await ganacheService.getUserBalance(GanacheService.userAddress);
 
       // Load diagram data
       lodaYesNoTransactionData();
@@ -226,7 +232,7 @@ class TradeDetailPageController {
   }
 
   void amountTextControllerOnChange(String value) {
-    if(value.isEmpty){
+    if (value.isEmpty) {
       amount = 0;
       return;
     }
@@ -242,7 +248,7 @@ class TradeDetailPageController {
   }
 
   void priceTextControllerOnChange(String value) {
-    if(value.isEmpty){
+    if (value.isEmpty) {
       price = 0;
       return;
     }
@@ -295,7 +301,119 @@ class TradeDetailPageController {
         }
       } else if (eventDetail.marketState == MarketState.active) {
         // Call backend to create order to order book
-        await Future.delayed(Duration(seconds: 2));
+        if (isBuyingPosition && userBalance! < totalCost) {
+          showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text("Insufficient Balance"),
+                  content: const Text(
+                      "You do not have enough balance to make this purchase."),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text("OK"),
+                    ),
+                  ],
+                );
+              });
+          if (context.mounted) {
+            setState(() {
+              purchaseRequestSending = false;
+            });
+          }
+          return;
+        } else if(!isBuyingPosition){
+          if (isYesPosition && userYesPosition! < amount) {
+            showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text("Insufficient Yes Position"),
+                    content: const Text(
+                        "You do not have enough Yes position to make this purchase."),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("OK"),
+                      ),
+                    ],
+                  );
+                });
+            if (context.mounted) {
+              setState(() {
+                purchaseRequestSending = false;
+              });
+            }
+            return;
+          } else if (!isYesPosition && userNoPosition! < amount) {
+            showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text("Insufficient No Position"),
+                    content: const Text(
+                        "You do not have enough No position to make this purchase."),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("OK"),
+                      ),
+                    ],
+                  );
+                });
+            if (context.mounted) {
+              setState(() {
+                purchaseRequestSending = false;
+              });
+            }
+            return;
+          }
+        }
+
+        Order order = Order(
+            userAddress: GanacheService.userAddress,
+            marketAddress: marketAddress,
+            outcome: isYesPosition ? Outcome.yes : Outcome.no,
+            price: price,
+            amount: amount,
+            side: isBuyingPosition ? Side.buy : Side.sell);
+        final result = await Network.manager.sendRequest(
+            method: RequestMethod.post,
+            path: OrdersPath.create,
+            data: order.toJson);
+
+        if (result["status"] == "success") {
+          if (context.mounted) {
+            await showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text("Success"),
+                    content: const Text("Purchase order create successfully."),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("OK"),
+                      ),
+                    ],
+                  );
+                });
+            if (context.mounted) {
+              Navigator.of(context).pop();
+            }
+          }
+        } else {
+          throw Exception("Sending purchase request failed");
+        }
       } else {
         throw Exception("Invalid market state");
       }
@@ -350,7 +468,9 @@ class TradeDetailPageController {
                   actions: [
                     TextButton(
                       onPressed: () {
-                        Navigator.of(context).pop();
+                        Navigator.of(context).pop(eventDetail.resolvedToYes
+                            ? userYesPosition
+                            : userNoPosition);
                       },
                       child: const Text("OK"),
                     ),
@@ -358,7 +478,7 @@ class TradeDetailPageController {
                 );
               });
           if (context.mounted) {
-            Navigator.of(context).pop(userYesPosition);
+            Navigator.of(context).pop();
           }
         } else {
           if (result.$2 == "Already claimed") {

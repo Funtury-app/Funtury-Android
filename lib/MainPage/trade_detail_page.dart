@@ -1038,10 +1038,17 @@ class YesNoDiagram extends StatelessWidget {
     //   _maxx = _minx + timeInterval.toDouble();
     // }
 
-    double _minx =
-        transactionData.first.timestamp.millisecondsSinceEpoch.toDouble();
-    double _maxx =
-        transactionData.last.timestamp.millisecondsSinceEpoch.toDouble();
+    double _minx;
+    double _maxx;
+    if(transactionData.isEmpty) {
+      _minx = DateTime.now().millisecondsSinceEpoch.toDouble();
+      _maxx = DateTime.now().millisecondsSinceEpoch.toDouble();
+    }
+    else {
+      _minx = transactionData.first.timestamp.millisecondsSinceEpoch.toDouble();
+      _maxx = transactionData.last.timestamp.millisecondsSinceEpoch.toDouble();
+    }
+  
     Map<int, YesNoTransaction> transactionMap = {};
     for (int i = 0; i < transactionData.length; i++) {
       transactionMap[transactionData[i].timestamp.millisecondsSinceEpoch] =

@@ -4,7 +4,7 @@ import 'package:web3dart/web3dart.dart';
 
 class FunturyContract {
   static EthereumAddress contractAddress =
-      EthereumAddress.fromHex("0xC60DbF9B9A133E80E7eBb150e035801Bdf0FAA77");
+      EthereumAddress.fromHex("0x6bFc371F6578de154667697c3f72313652bFB31e");
   static DeployedContract funturyContract = DeployedContract(
     ContractAbi.fromJson(
         jsonEncode(ContractAbiJson.funturyContractAbi), 'FunturyContract'),
@@ -66,8 +66,8 @@ class FunturyContract {
       funturyContract.function("totalFTSupply");
 
   // Events
-  static ContractEvent tokensClaimedEvent =
-      funturyContract.event('TokensClaimed');
+  static ContractEvent tokenClaimedEvent =
+      funturyContract.event('TokenClaimed');
   static ContractEvent marketCreatedEvent =
       funturyContract.event('MarketCreated');
   static ContractEvent transferEvent = funturyContract.event('Transfer');
@@ -76,11 +76,11 @@ class FunturyContract {
       funturyContract.event('MarketTransferRecord');
 
   // Event stream getters
-  static Stream<TokensClaimedEvent> getTokensClaimedEvents(Web3Client client) {
+  static Stream<TokenClaimedEvent> getTokenClaimedEvents(Web3Client client) {
     return client
         .events(FilterOptions.events(
-            contract: funturyContract, event: tokensClaimedEvent))
-        .map((event) => TokensClaimedEvent.fromEventLog(event));
+            contract: funturyContract, event: tokenClaimedEvent))
+        .map((event) => TokenClaimedEvent.fromEventLog(event));
   }
 
   static Stream<MarketCreatedEvent> getMarketCreatedEvents(Web3Client client) {
@@ -114,20 +114,20 @@ class FunturyContract {
 }
 
 // Event models to parse event data
-class TokensClaimedEvent {
+class TokenClaimedEvent {
   final EthereumAddress user;
   final BigInt amount;
 
-  TokensClaimedEvent(this.user, this.amount);
+  TokenClaimedEvent(this.user, this.amount);
 
-  static TokensClaimedEvent fromEventLog(FilterEvent event) {
-    final decodedData = FunturyContract.tokensClaimedEvent
+  static TokenClaimedEvent fromEventLog(FilterEvent event) {
+    final decodedData = FunturyContract.tokenClaimedEvent
         .decodeResults(event.topics!, event.data!);
 
     final userAddress = decodedData[0] as EthereumAddress;
     final amount = decodedData[1] as BigInt;
 
-    return TokensClaimedEvent(userAddress, amount);
+    return TokenClaimedEvent(userAddress, amount);
   }
 }
 

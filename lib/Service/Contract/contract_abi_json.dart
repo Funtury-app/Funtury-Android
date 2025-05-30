@@ -240,7 +240,7 @@ class ContractAbiJson {
               "type": "uint256"
             }
           ],
-          "name": "TokensClaimed",
+          "name": "TokenClaimed",
           "type": "event"
         },
         {
@@ -387,15 +387,6 @@ class ContractAbiJson {
           "name": "getMarketContract",
           "outputs": [
             {"internalType": "address", "name": "", "type": "address"}
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [],
-          "name": "getMarketCount",
-          "outputs": [
-            {"internalType": "uint256", "name": "", "type": "uint256"}
           ],
           "stateMutability": "view",
           "type": "function"
