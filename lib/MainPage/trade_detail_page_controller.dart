@@ -22,6 +22,8 @@ class TradeDetailPageController {
   List<YesNoTransaction> yesTransactions = [];
   List<YesNoTransaction> noTransactions = [];
 
+  OrderBookOrder orderBook = OrderBookOrder();  
+
   late BuildContext context;
   late void Function(VoidCallback) setState;
   late EthereumAddress marketAddress;
@@ -35,6 +37,8 @@ class TradeDetailPageController {
 
   bool marketInfoLoading = false;
   bool diagramDataLoading = false;
+  bool orderBookDataLoading = false;
+  bool orderBookLoadingError = false;
   bool purchaseRequestSending = false;
   bool rewardClaiming = false;
 
@@ -107,6 +111,9 @@ class TradeDetailPageController {
 
       // Load diagram data
       lodaYesNoTransactionData();
+
+      // Load order book data
+      loadOrderBookOrder();
 
       debugPrint("Market info: $data");
     } catch (e) {
@@ -192,6 +199,76 @@ class TradeDetailPageController {
     if (context.mounted) {
       setState(() {
         diagramDataLoading = false;
+      });
+    }
+  }
+
+  Future loadOrderBookOrder() async{
+    if(orderBookDataLoading) return;
+    setState((){
+      orderBookDataLoading = true;
+    });
+
+    try{
+      final result = await Future.wait([
+        Network.manager.sendRequest(method: RequestMethod.get, path: OrdersPath.orderbook, pathMid: [marketAddress.hexEip55, "yes"]),
+        Network.manager.sendRequest(method: RequestMethod.get, path: OrdersPath.orderbook, pathMid: [marketAddress.hexEip55, "no"]),
+      ]);
+
+      if(result[0]["status"] == "success" && result[1]["status"] == "success"){
+        orderBook.clear();
+        final yesOrders = result[0]["data"];
+        final noOrders = result[1]["data"];
+        for (var order in yesOrders) {
+          double price = order["price"].toDouble();
+          int amount = order["amount"];
+          if(order["side"] == "buy"){
+            orderBook.buyYesOrders[price] = orderBook.buyYesOrders[price] == null ? amount : orderBook.buyYesOrders[price]! + amount;
+          }else{
+            orderBook.sellYesOrders[price] = orderBook.sellYesOrders[price] == null ? amount : orderBook.sellYesOrders[price]! + amount;
+          }
+        }
+
+        for(var order in noOrders){
+          double price = order["price"].toDouble();
+          int amount = order["amount"];
+          if(order["side"] == "buy"){
+            orderBook.buyNoOrders[price] = orderBook.buyNoOrders[price] == null ? amount : orderBook.buyNoOrders[price]! + amount;
+          }else{
+            orderBook.sellNoOrders[price] = orderBook.sellNoOrders[price] == null ? amount : orderBook.sellNoOrders[price]! + amount;
+          }
+        }
+        
+        debugPrint("Order book data loaded successfully");
+      } else{
+        throw Exception("Failed to load order book data");
+      }
+    } catch(e){
+      orderBookLoadingError = true;
+      debugPrint("Order book data loading error: $e");
+      if (context.mounted) {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text("Error"),
+                content: const Text(
+                    "Failed to load order book data. Please try again."),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("OK"),
+                  ),
+                ],
+              );
+            });
+      }
+    }
+    if(context.mounted){
+      setState((){
+        orderBookDataLoading = false;
       });
     }
   }
@@ -533,5 +610,36 @@ class TradeDetailPageController {
         rewardClaiming = false;
       });
     }
+  }
+}
+
+class OrderBookOrder{
+  Map<double, int> sellYesOrders = {};
+  Map<double, int> sellNoOrders = {};
+  Map<double, int> buyYesOrders = {};
+  Map<double, int> buyNoOrders = {};
+
+  void clear(){
+    sellYesOrders.clear();
+    sellNoOrders.clear();
+    buyYesOrders.clear();
+    buyNoOrders.clear();
+  }
+
+  get sellYesList {
+    return sellYesOrders.entries.toList()
+      ..sort((a, b) => b.key.compareTo(a.key));
+  }
+  get sellNoList {
+    return sellNoOrders.entries.toList()
+      ..sort((a, b) => b.key.compareTo(a.key));
+  }
+  get buyYesList {
+    return buyYesOrders.entries.toList()
+      ..sort((a, b) => b.key.compareTo(a.key));
+  }
+  get buyNoList {
+    return buyNoOrders.entries.toList()
+      ..sort((a, b) => b.key.compareTo(a.key));
   }
 }

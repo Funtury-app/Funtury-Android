@@ -181,24 +181,75 @@ class _TradeDetailPageState extends State<TradeDetailPage> {
                               SizedBox(
                                 height: 10.0,
                               ),
-                              Expanded(
-                                  child: Container(
-                                alignment: Alignment.center,
-                                child:
-                                    tradeDetailPageController.diagramDataLoading
-                                        ? CircularProgressIndicator(
-                                            color: Colors.grey,
-                                          )
-                                        : tradeDetailPageController.isYesDiagram
-                                            ? YesNoDiagram(
-                                                transactionData:
-                                                    tradeDetailPageController
-                                                        .yesTransactions)
-                                            : YesNoDiagram(
-                                                transactionData:
-                                                    tradeDetailPageController
-                                                        .noTransactions),
-                              ))
+                              SizedBox(
+                                  height: 270,
+                                  width: 360,
+                                  child: SingleChildScrollView(
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          width: 340,
+                                          height: 270,
+                                          // padding: const EdgeInsets.all(10.0),
+                                          alignment: Alignment.center,
+                                          child: tradeDetailPageController
+                                                  .diagramDataLoading
+                                              ? CircularProgressIndicator(
+                                                  color: Colors.grey,
+                                                )
+                                              : tradeDetailPageController
+                                                      .isYesDiagram
+                                                  ? YesNoDiagram(
+                                                      transactionData:
+                                                          tradeDetailPageController
+                                                              .yesTransactions)
+                                                  : YesNoDiagram(
+                                                      transactionData:
+                                                          tradeDetailPageController
+                                                              .noTransactions),
+                                        ),
+                                        SizedBox(
+                                          height: 10,
+                                        ),
+                                        Text(
+                                          "Order Book",
+                                          style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        SizedBox(
+                                          height: 10,
+                                        ),
+                                        SizedBox(
+                                            width: 340,
+                                            height: 313,
+                                            child: tradeDetailPageController
+                                                    .orderBookDataLoading
+                                                ? Center(
+                                                    child:
+                                                        CircularProgressIndicator(),
+                                                  )
+                                                : tradeDetailPageController
+                                                        .orderBookLoadingError
+                                                    ? Text(
+                                                        "Order Book Load Failed",
+                                                        style: TextStyle(
+                                                            color: Colors.black,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .normal,
+                                                            fontSize: 16))
+                                                    : YesNoOrderBook(
+                                                        tradeDetailPageController:
+                                                            tradeDetailPageController))
+                                      ],
+                                    ),
+                                  ))
                             ],
                           ),
                         ),
@@ -1040,15 +1091,14 @@ class YesNoDiagram extends StatelessWidget {
 
     double _minx;
     double _maxx;
-    if(transactionData.isEmpty) {
+    if (transactionData.isEmpty) {
       _minx = DateTime.now().millisecondsSinceEpoch.toDouble();
       _maxx = DateTime.now().millisecondsSinceEpoch.toDouble();
-    }
-    else {
+    } else {
       _minx = transactionData.first.timestamp.millisecondsSinceEpoch.toDouble();
       _maxx = transactionData.last.timestamp.millisecondsSinceEpoch.toDouble();
     }
-  
+
     Map<int, YesNoTransaction> transactionMap = {};
     for (int i = 0; i < transactionData.length; i++) {
       transactionMap[transactionData[i].timestamp.millisecondsSinceEpoch] =
@@ -1174,13 +1224,15 @@ class YesNoDiagram extends StatelessWidget {
         ],
         lineTouchData: LineTouchData(
           touchTooltipData: LineTouchTooltipData(
+            fitInsideHorizontally: true,
+            fitInsideVertically: true,
             getTooltipItems: (List<LineBarSpot> touchedSpots) {
               return touchedSpots.map((spot) {
                 final millesecond = spot.x.toInt();
                 if (transactionMap[millesecond] != null) {
                   final transaction = transactionMap[millesecond]!;
                   return LineTooltipItem(
-                    '${transaction.timestamp.year}-${transaction.timestamp.month}-${transaction.timestamp.day} ${transaction.timestamp.hour}:${transaction.timestamp.minute}:${transaction.timestamp.second}\n',
+                    '${transaction.timestamp.year}-${transaction.timestamp.month}-${transaction.timestamp.day}\n${transaction.timestamp.hour}:${transaction.timestamp.minute}:${transaction.timestamp.second}\n',
                     const TextStyle(color: Colors.white),
                     children: [
                       TextSpan(
@@ -1226,6 +1278,458 @@ class YesNoDiagram extends StatelessWidget {
           transactionData[index].timestamp.millisecondsSinceEpoch.toDouble(),
           transactionData[index].perPrice),
       // (index) => FlSpot(index.toDouble(), transactionData[index].perPrice),
+    );
+  }
+}
+
+class YesNoOrderBook extends StatelessWidget {
+  const YesNoOrderBook({super.key, required this.tradeDetailPageController});
+
+  final TradeDetailPageController tradeDetailPageController;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Yes/No topic
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Container(
+                width: 124,
+                height: 28,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.25),
+                        spreadRadius: 0,
+                        blurRadius: 4,
+                        offset: const Offset(4, 4),
+                      ),
+                    ]),
+                child: Text(
+                  "Yes",
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(top: 20),
+                alignment: Alignment.bottomCenter,
+                height: 40,
+                child: Text(
+                  "Sell",
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Container(
+                width: 124,
+                height: 28,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.25),
+                        spreadRadius: 0,
+                        blurRadius: 4,
+                        offset: const Offset(4, 4),
+                      ),
+                    ]),
+                child: Text(
+                  "No",
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold),
+                ),
+              )
+            ],
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                        child: Container(
+                      alignment: Alignment.center,
+                      child: Text(
+                        "Price(𝟊)",
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    )),
+                    Expanded(
+                        child: Container(
+                      alignment: Alignment.center,
+                      child: Text(
+                        "Amount",
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12),
+                      ),
+                    )),
+                  ],
+                ),
+              ),
+              Expanded(
+                  child: Row(
+                children: [
+                  Expanded(
+                      child: Container(
+                    alignment: Alignment.center,
+                    child: Text(
+                      "Price(𝟊)",
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  )),
+                  Expanded(
+                      child: Container(
+                    alignment: Alignment.center,
+                    child: Text(
+                      "Amount",
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12),
+                    ),
+                  )),
+                ],
+              )),
+            ],
+          ),
+          // Sell part
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Yes sell
+              Expanded(
+                child: Container(
+                    width: 160,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      border: Border(
+                        right: BorderSide(color: Colors.black, width: 1),
+                      ),
+                    ),
+                    child: SingleChildScrollView(
+                      reverse: true,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        children: [
+                          for (var order in tradeDetailPageController
+                              .orderBook.sellYesList) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    height: 30,
+                                    padding: const EdgeInsets.only(left: 5.0),
+                                    alignment: Alignment.centerLeft,
+                                    decoration: BoxDecoration(
+                                        border: Border(
+                                            top: BorderSide(
+                                                color: Colors.black26,
+                                                width: 1.0),
+                                            right: BorderSide(
+                                                color: Colors.black26,
+                                                width: 0.5))),
+                                    child: Text(
+                                      "${order.key.toStringAsFixed(2)}",
+                                      style: TextStyle(
+                                          color: Colors.green,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    height: 30,
+                                    padding: const EdgeInsets.only(right: 5.0),
+                                    alignment: Alignment.centerRight,
+                                    decoration: BoxDecoration(
+                                        border: Border(
+                                            top: BorderSide(
+                                                color: Colors.black26,
+                                                width: 1.0),
+                                            left: BorderSide(
+                                                color: Colors.black26,
+                                                width: 0.5))),
+                                    child: Text(
+                                      order.value.toString(),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          ]
+                        ],
+                      ),
+                    )),
+              ),
+              // No sell
+              Expanded(
+                  child: Container(
+                width: 160,
+                height: 100,
+                decoration: BoxDecoration(
+                    border: Border(
+                  left: BorderSide(color: Colors.black, width: 1),
+                )),
+                child: SingleChildScrollView(
+                    reverse: true,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      children: [
+                        for (var order in tradeDetailPageController
+                            .orderBook.sellNoList) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  height: 30,
+                                  padding: const EdgeInsets.only(left: 5.0),
+                                  alignment: Alignment.centerLeft,
+                                  decoration: BoxDecoration(
+                                      border: Border(
+                                          top: BorderSide(
+                                              color: Colors.black26,
+                                              width: 1.0),
+                                          right: BorderSide(
+                                              color: Colors.black26,
+                                              width: 0.5))),
+                                  child: Text(
+                                    "${order.key.toStringAsFixed(2)}",
+                                    style: TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  height: 30,
+                                  padding: const EdgeInsets.only(right: 5.0),
+                                  alignment: Alignment.centerRight,
+                                  decoration: BoxDecoration(
+                                      border: Border(
+                                          top: BorderSide(
+                                              color: Colors.black26,
+                                              width: 1.0),
+                                          left: BorderSide(
+                                              color: Colors.black26,
+                                              width: 0.5))),
+                                  child: Text(
+                                    order.value.toString(),
+                                    style: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        ]
+                      ],
+                    )),
+              )),
+            ],
+          ),
+          Divider(
+            color: Colors.black,
+            thickness: 2.0,
+            height: 2.0,
+          ),
+          // Buy part
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Yes buy
+              Expanded(
+                child: Container(
+                    width: 160,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      border: Border(
+                        right: BorderSide(color: Colors.black, width: 1),
+                      ),
+                    ),
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        children: [
+                          for (var order in tradeDetailPageController
+                              .orderBook.buyYesList) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    height: 30,
+                                    padding: const EdgeInsets.only(left: 5.0),
+                                    alignment: Alignment.centerLeft,
+                                    decoration: BoxDecoration(
+                                        border: Border(
+                                            bottom: BorderSide(
+                                                color: Colors.black26,
+                                                width: 1.0),
+                                            right: BorderSide(
+                                                color: Colors.black26,
+                                                width: 0.5))),
+                                    child: Text(
+                                      "${order.key.toStringAsFixed(2)}",
+                                      style: TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    height: 30,
+                                    padding: const EdgeInsets.only(right: 5.0),
+                                    alignment: Alignment.centerRight,
+                                    decoration: BoxDecoration(
+                                        border: Border(
+                                            bottom: BorderSide(
+                                                color: Colors.black26,
+                                                width: 1.0),
+                                            left: BorderSide(
+                                                color: Colors.black26,
+                                                width: 0.5))),
+                                    child: Text(
+                                      order.value.toString(),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          ]
+                        ],
+                      ),
+                    )),
+              ),
+              // No buy
+              Expanded(
+                child: Container(
+                    width: 160,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(color: Colors.black, width: 1),
+                      ),
+                    ),
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        children: [
+                          for (var order in tradeDetailPageController
+                              .orderBook.buyNoList) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    height: 30,
+                                    padding: const EdgeInsets.only(left: 5.0),
+                                    alignment: Alignment.centerLeft,
+                                    decoration: BoxDecoration(
+                                        border: Border(
+                                            bottom: BorderSide(
+                                                color: Colors.black26,
+                                                width: 1.0),
+                                            right: BorderSide(
+                                                color: Colors.black26,
+                                                width: 0.5))),
+                                    child: Text(
+                                      "${order.key.toStringAsFixed(2)}",
+                                      style: TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    height: 30,
+                                    padding: const EdgeInsets.only(right: 5.0),
+                                    alignment: Alignment.centerRight,
+                                    decoration: BoxDecoration(
+                                        border: Border(
+                                            bottom: BorderSide(
+                                                color: Colors.black26,
+                                                width: 1.0),
+                                            left: BorderSide(
+                                                color: Colors.black26,
+                                                width: 0.5))),
+                                    child: Text(
+                                      order.value.toString(),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          ]
+                        ],
+                      ),
+                    )),
+              ),
+            ],
+          ),
+
+          Text(
+            "Buy",
+            style: TextStyle(
+                color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
+          )
+        ],
+      ),
     );
   }
 }
