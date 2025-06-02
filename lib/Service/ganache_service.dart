@@ -345,7 +345,8 @@ class GanacheService {
     }
   }
 
-  Future<(bool, List<Map<String, dynamic>>)> queryAllYesTransactionRecord(EthereumAddress marketAddress) async {
+  Future<(bool, List<Map<String, dynamic>>)> queryAllYesTransactionRecord(
+      EthereumAddress marketAddress) async {
     PredictionMarketContract predictionMarketContract =
         PredictionMarketContract(contractAddress: marketAddress);
     List<Map<String, dynamic>> data = [];
@@ -366,7 +367,8 @@ class GanacheService {
       final logs = await ganacheClient.getLogs(filter);
 
       for (var log in logs) {
-        final decodedLog = YesTransactionEvent.fromEventLog(predictionMarketContract,log);
+        final decodedLog =
+            YesTransactionEvent.fromEventLog(predictionMarketContract, log);
 
         data.add(
           {
@@ -382,12 +384,13 @@ class GanacheService {
       }
     } catch (e) {
       debugPrint("GanacheService queryAllYesTransactionRecord error: $e");
-      return(false, data);
+      return (false, data);
     }
     return (true, data);
   }
 
-  Future<(bool, List<Map<String, dynamic>>)> queryAllNoTransactionRecord(EthereumAddress marketAddress) async {
+  Future<(bool, List<Map<String, dynamic>>)> queryAllNoTransactionRecord(
+      EthereumAddress marketAddress) async {
     PredictionMarketContract predictionMarketContract =
         PredictionMarketContract(contractAddress: marketAddress);
     List<Map<String, dynamic>> data = [];
@@ -408,7 +411,8 @@ class GanacheService {
       final logs = await ganacheClient.getLogs(filter);
 
       for (var log in logs) {
-        final decodedLog = NoTransactionEvent.fromEventLog(predictionMarketContract,log);
+        final decodedLog =
+            NoTransactionEvent.fromEventLog(predictionMarketContract, log);
 
         data.add(
           {
@@ -424,10 +428,40 @@ class GanacheService {
       }
     } catch (e) {
       debugPrint("GanacheService queryAllNoTransactionRecord error: $e");
-      return(false, data);
+      return (false, data);
     }
     return (true, data);
   }
+
+  Future<(bool, Map<String, dynamic>)> getMarketPreorderSellingInfo(
+      EthereumAddress marketAddress) async {
+    PredictionMarketContract predictionMarketContract =
+        PredictionMarketContract(contractAddress: marketAddress);
+    Map<String, dynamic> data = {};
+
+    try {
+      final result = await Future.wait([
+        ganacheClient.call(
+            contract: predictionMarketContract.contract,
+            function: predictionMarketContract.getMarketInitialYesNoShares(),
+            params: []),
+        ganacheClient.call(
+            contract: predictionMarketContract.contract,
+            function: predictionMarketContract.getMarketRemainYesNoShares(),
+            params: [])
+      ]);
+      data["init_yes"] = (result[0][0] as BigInt).toDouble();
+      data["init_no"] = (result[0][1] as BigInt).toDouble();
+      data["remain_yes"] = (result[1][0] as BigInt).toDouble();
+      data["remain_no"] = (result[1][1] as BigInt).toDouble();
+      debugPrint("GanacheService getMarketPreorderSellingInfo result: $data");
+      return(true, data);
+    } catch (e) {
+      debugPrint("GanacheService getMarketPreorderSellingInfo error: $e");
+      return (false, data);
+    }
+  }
+
   /// Prediction contract transfer function ///
 }
 

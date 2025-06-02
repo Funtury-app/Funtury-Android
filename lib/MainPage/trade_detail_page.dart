@@ -163,21 +163,38 @@ class _TradeDetailPageState extends State<TradeDetailPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Yes No diagram switcher
-                              SizedBox(
-                                width: 200,
-                                child: CupertinoSlidingSegmentedControl(
-                                  children: {
-                                    0: Text("Yes"),
-                                    1: Text("No"),
-                                  },
-                                  groupValue: tradeDetailPageController
-                                      .slidingYesNoDiagram,
-                                  onValueChanged: (int? newValue) {
-                                    tradeDetailPageController
-                                        .switchDiagram(newValue!);
-                                  },
-                                ),
-                              ),
+                              Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    SizedBox(
+                                      width: 200,
+                                      child: CupertinoSlidingSegmentedControl(
+                                        children: {
+                                          0: Text("Yes"),
+                                          1: Text("No"),
+                                        },
+                                        groupValue: tradeDetailPageController
+                                            .slidingYesNoDiagram,
+                                        onValueChanged: (int? newValue) {
+                                          tradeDetailPageController
+                                              .switchDiagram(newValue!);
+                                        },
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      child: Text(
+                                        tradeDetailPageController.isYesDiagram
+                                            ? "${(tradeDetailPageController.yesBaseProbability * 100).toStringAsFixed(0)}%"
+                                            : "${(tradeDetailPageController.noBaseProbability * 100).toStringAsFixed(0)}%",
+                                        style: TextStyle(
+                                            color: Color(0xFF5596FF),
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            fontStyle: FontStyle.italic),
+                                      ),
+                                    )
+                                  ]),
                               SizedBox(
                                 height: 10.0,
                               ),
@@ -206,11 +223,13 @@ class _TradeDetailPageState extends State<TradeDetailPage> {
                                                   ? YesNoDiagram(
                                                       transactionData:
                                                           tradeDetailPageController
-                                                              .yesTransactions)
+                                                              .yesTransactions,
+                                                      baseProbability: tradeDetailPageController.yesBaseProbability,)
                                                   : YesNoDiagram(
                                                       transactionData:
                                                           tradeDetailPageController
-                                                              .noTransactions),
+                                                              .noTransactions,
+                                                      baseProbability: tradeDetailPageController.noBaseProbability,),
                                         ),
                                         SizedBox(
                                           height: 10,
@@ -1210,13 +1229,13 @@ class YesNoDiagram extends StatelessWidget {
             ),
             aboveBarData: BarAreaData(
               show: true,
-              cutOffY: 0.5,
+              cutOffY: baseProbability,
               applyCutOffY: true,
               color: Colors.green.withOpacity(0.5),
             ),
             belowBarData: BarAreaData(
               show: true,
-              cutOffY: 0.5,
+              cutOffY: baseProbability,
               applyCutOffY: true,
               color: Colors.red.withOpacity(0.5),
             ),
@@ -1303,7 +1322,7 @@ class YesNoOrderBook extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                    color: Theme.of(context).colorScheme.primaryContainer,
+                    color: Color(0xFF5596FF).withOpacity(0.8),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.25),
@@ -1339,7 +1358,7 @@ class YesNoOrderBook extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                    color: Theme.of(context).colorScheme.primaryContainer,
+                    color: Color(0xFF5596FF).withOpacity(0.8),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.25),

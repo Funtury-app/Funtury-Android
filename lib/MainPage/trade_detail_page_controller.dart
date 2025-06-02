@@ -24,6 +24,9 @@ class TradeDetailPageController {
 
   OrderBookOrder orderBook = OrderBookOrder();  
 
+  double yesBaseProbability = 0.5;
+  double noBaseProbability = 0.5;
+
   late BuildContext context;
   late void Function(VoidCallback) setState;
   late EthereumAddress marketAddress;
@@ -41,6 +44,7 @@ class TradeDetailPageController {
   bool orderBookLoadingError = false;
   bool purchaseRequestSending = false;
   bool rewardClaiming = false;
+  bool probabilityLoading = false;
 
   double price = 0.5;
   double maxPrice = 1.0;
@@ -111,6 +115,14 @@ class TradeDetailPageController {
 
       // Load diagram data
       lodaYesNoTransactionData();
+
+      // Load base probability
+      if(eventDetail.marketState != MarketState.preorder){
+        calculateBaseYesNoProbability();
+      } else{
+        yesBaseProbability = 0.5;
+        noBaseProbability = 0.5;
+      }
 
       // Load order book data
       loadOrderBookOrder();
@@ -199,6 +211,37 @@ class TradeDetailPageController {
     if (context.mounted) {
       setState(() {
         diagramDataLoading = false;
+      });
+    }
+  }
+
+  Future calculateBaseYesNoProbability() async{
+    if(probabilityLoading) return;
+    setState((){
+      probabilityLoading = true;
+    });
+
+    try{
+      final result = await ganacheService.getMarketPreorderSellingInfo(marketAddress);
+      if(result.$1){
+        double yesSelling = result.$2["init_yes"] - result.$2["remain_yes"];
+        double noSelling = result.$2["init_no"] - result.$2["remain_no"];
+
+        yesBaseProbability = yesSelling / (yesSelling + noSelling);
+        noBaseProbability = noSelling / (yesSelling + noSelling);
+
+        debugPrint("Base probability calculated: Yes: $yesBaseProbability, No: $noBaseProbability");
+      } else{
+        throw Exception("Failed to calculate base probability");
+      }
+    } catch(e){
+      debugPrint("Base probability calculation error: $e");
+    }
+
+
+    if(context.mounted){
+      setState((){
+        probabilityLoading = false;
       });
     }
   }
