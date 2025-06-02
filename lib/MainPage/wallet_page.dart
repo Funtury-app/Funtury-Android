@@ -303,37 +303,39 @@ class _WalletPageState extends State<WalletPage> {
                                             : RefreshIndicator(
                                                 onRefresh: walletPageController
                                                     .userOrderHistoryRefresh,
-                                                child: ListView(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          bottom: 80.0),
-                                                  scrollDirection:
-                                                      Axis.vertical,
-                                                  physics:
-                                                      const AlwaysScrollableScrollPhysics(),
-                                                  children: [
-                                                    for (var orderInfo
-                                                        in walletPageController
-                                                            .userOrderHistory.reversed) ...[
-                                                      if (orderInfo.status !=
-                                                          OrderStatus.cancelled)
-                                                        Container(
-                                                            margin:
-                                                                const EdgeInsets
+                                                child: SingleChildScrollView(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            bottom: 80.0),
+                                                    scrollDirection:
+                                                        Axis.vertical,
+                                                    physics:
+                                                        const AlwaysScrollableScrollPhysics(),
+                                                    child: Column(
+                                                      children: [
+                                                        for (var orderInfo
+                                                            in walletPageController
+                                                                .userOrderHistory
+                                                                .reversed) ...[
+                                                          if (orderInfo
+                                                                  .status !=
+                                                              OrderStatus
+                                                                  .cancelled)
+                                                            Container(
+                                                                margin: const EdgeInsets
                                                                     .symmetric(
                                                                     vertical:
                                                                         10.0),
-                                                            padding:
-                                                                const EdgeInsets
+                                                                padding: const EdgeInsets
                                                                     .symmetric(
                                                                     horizontal:
                                                                         5.0),
-                                                            child: OrderCard(
-                                                                orderInfo:
-                                                                    orderInfo))
-                                                    ]
-                                                  ],
-                                                ),
+                                                                child: OrderCard(
+                                                                    orderInfo:
+                                                                        orderInfo))
+                                                        ]
+                                                      ],
+                                                    )),
                                               ),
                               )
                             ],
