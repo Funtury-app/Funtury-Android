@@ -22,10 +22,12 @@ class TradeDetailPageController {
   List<YesNoTransaction> yesTransactions = [];
   List<YesNoTransaction> noTransactions = [];
 
-  OrderBookOrder orderBook = OrderBookOrder();  
+  OrderBookOrder orderBook = OrderBookOrder();
 
   double yesBaseProbability = 0.5;
   double noBaseProbability = 0.5;
+  double deltaYesProbability = 0.0;
+  double deltaNoProbability = 0.0;
 
   late BuildContext context;
   late void Function(VoidCallback) setState;
@@ -117,12 +119,15 @@ class TradeDetailPageController {
       lodaYesNoTransactionData();
 
       // Load base probability
-      if(eventDetail.marketState != MarketState.preorder){
+      if (eventDetail.marketState != MarketState.preorder) {
         calculateBaseYesNoProbability();
-      } else{
+      } else {
         yesBaseProbability = 0.5;
         noBaseProbability = 0.5;
       }
+
+      // Calculate delta probability
+      calculateDeltaYesNoProbability();
 
       // Load order book data
       loadOrderBookOrder();
@@ -215,78 +220,117 @@ class TradeDetailPageController {
     }
   }
 
-  Future calculateBaseYesNoProbability() async{
-    if(probabilityLoading) return;
-    setState((){
+  Future calculateBaseYesNoProbability() async {
+    if (probabilityLoading) return;
+    setState(() {
       probabilityLoading = true;
     });
 
-    try{
-      final result = await ganacheService.getMarketPreorderSellingInfo(marketAddress);
-      if(result.$1){
+    try {
+      final result =
+          await ganacheService.getMarketPreorderSellingInfo(marketAddress);
+      if (result.$1) {
         double yesSelling = result.$2["init_yes"] - result.$2["remain_yes"];
         double noSelling = result.$2["init_no"] - result.$2["remain_no"];
 
         yesBaseProbability = yesSelling / (yesSelling + noSelling);
         noBaseProbability = noSelling / (yesSelling + noSelling);
 
-        debugPrint("Base probability calculated: Yes: $yesBaseProbability, No: $noBaseProbability");
-      } else{
+        debugPrint(
+            "Base probability calculated: Yes: $yesBaseProbability, No: $noBaseProbability");
+      } else {
         throw Exception("Failed to calculate base probability");
       }
-    } catch(e){
+    } catch (e) {
       debugPrint("Base probability calculation error: $e");
     }
 
-
-    if(context.mounted){
-      setState((){
+    if (context.mounted) {
+      setState(() {
         probabilityLoading = false;
       });
     }
   }
 
-  Future loadOrderBookOrder() async{
-    if(orderBookDataLoading) return;
-    setState((){
+  Future calculateDeltaYesNoProbability() async {
+    while (probabilityLoading || diagramDataLoading) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!context.mounted) {
+        break;
+      }
+    }
+
+    if (context.mounted) {
+      setState(() {
+        if (yesTransactions.isNotEmpty) {
+          deltaYesProbability = yesTransactions.last.perPrice - yesBaseProbability;
+        }
+        if (noTransactions.isNotEmpty) {
+          deltaNoProbability = noTransactions.last.perPrice - noBaseProbability;
+        }
+      });
+    }
+  }
+
+  Future loadOrderBookOrder() async {
+    if (orderBookDataLoading) return;
+    setState(() {
       orderBookDataLoading = true;
     });
 
-    try{
+    try {
       final result = await Future.wait([
-        Network.manager.sendRequest(method: RequestMethod.get, path: OrdersPath.orderbook, pathMid: [marketAddress.hexEip55, "yes"]),
-        Network.manager.sendRequest(method: RequestMethod.get, path: OrdersPath.orderbook, pathMid: [marketAddress.hexEip55, "no"]),
+        Network.manager.sendRequest(
+            method: RequestMethod.get,
+            path: OrdersPath.orderbook,
+            pathMid: [marketAddress.hexEip55, "yes"]),
+        Network.manager.sendRequest(
+            method: RequestMethod.get,
+            path: OrdersPath.orderbook,
+            pathMid: [marketAddress.hexEip55, "no"]),
       ]);
 
-      if(result[0]["status"] == "success" && result[1]["status"] == "success"){
+      if (result[0]["status"] == "success" &&
+          result[1]["status"] == "success") {
         orderBook.clear();
         final yesOrders = result[0]["data"];
         final noOrders = result[1]["data"];
         for (var order in yesOrders) {
           double price = order["price"].toDouble();
           int amount = order["amount"];
-          if(order["side"] == "buy"){
-            orderBook.buyYesOrders[price] = orderBook.buyYesOrders[price] == null ? amount : orderBook.buyYesOrders[price]! + amount;
-          }else{
-            orderBook.sellYesOrders[price] = orderBook.sellYesOrders[price] == null ? amount : orderBook.sellYesOrders[price]! + amount;
+          if (order["side"] == "buy") {
+            orderBook.buyYesOrders[price] =
+                orderBook.buyYesOrders[price] == null
+                    ? amount
+                    : orderBook.buyYesOrders[price]! + amount;
+          } else {
+            orderBook.sellYesOrders[price] =
+                orderBook.sellYesOrders[price] == null
+                    ? amount
+                    : orderBook.sellYesOrders[price]! + amount;
           }
         }
 
-        for(var order in noOrders){
+        for (var order in noOrders) {
           double price = order["price"].toDouble();
           int amount = order["amount"];
-          if(order["side"] == "buy"){
-            orderBook.buyNoOrders[price] = orderBook.buyNoOrders[price] == null ? amount : orderBook.buyNoOrders[price]! + amount;
-          }else{
-            orderBook.sellNoOrders[price] = orderBook.sellNoOrders[price] == null ? amount : orderBook.sellNoOrders[price]! + amount;
+          if (order["side"] == "buy") {
+            orderBook.buyNoOrders[price] = orderBook.buyNoOrders[price] == null
+                ? amount
+                : orderBook.buyNoOrders[price]! + amount;
+          } else {
+            orderBook.sellNoOrders[price] =
+                orderBook.sellNoOrders[price] == null
+                    ? amount
+                    : orderBook.sellNoOrders[price]! + amount;
           }
         }
-        
+
         debugPrint("Order book data loaded successfully");
-      } else{
+      } else {
         throw Exception("Failed to load order book data");
       }
-    } catch(e){
+    } catch (e) {
       orderBookLoadingError = true;
       debugPrint("Order book data loading error: $e");
       if (context.mounted) {
@@ -309,8 +353,8 @@ class TradeDetailPageController {
             });
       }
     }
-    if(context.mounted){
-      setState((){
+    if (context.mounted) {
+      setState(() {
         orderBookDataLoading = false;
       });
     }
@@ -445,7 +489,7 @@ class TradeDetailPageController {
             });
           }
           return;
-        } else if(!isBuyingPosition){
+        } else if (!isBuyingPosition) {
           if (isYesPosition && userYesPosition! < amount) {
             showDialog(
                 context: context,
@@ -656,13 +700,13 @@ class TradeDetailPageController {
   }
 }
 
-class OrderBookOrder{
+class OrderBookOrder {
   Map<double, int> sellYesOrders = {};
   Map<double, int> sellNoOrders = {};
   Map<double, int> buyYesOrders = {};
   Map<double, int> buyNoOrders = {};
 
-  void clear(){
+  void clear() {
     sellYesOrders.clear();
     sellNoOrders.clear();
     buyYesOrders.clear();
@@ -673,16 +717,18 @@ class OrderBookOrder{
     return sellYesOrders.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));
   }
+
   get sellNoList {
     return sellNoOrders.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));
   }
+
   get buyYesList {
     return buyYesOrders.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));
   }
+
   get buyNoList {
-    return buyNoOrders.entries.toList()
-      ..sort((a, b) => b.key.compareTo(a.key));
+    return buyNoOrders.entries.toList()..sort((a, b) => b.key.compareTo(a.key));
   }
 }

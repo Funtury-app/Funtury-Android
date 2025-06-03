@@ -27,6 +27,8 @@ class BrowserPageController {
         ganacheService.queryAllMarkets(),
       ]);
 
+      events.clear();
+
       for (int i = 0; i < result[0].length; i++) {
         events.add(BrowserEvent.fromData(result[0][i]));
       }
@@ -63,5 +65,7 @@ class BrowserPageController {
     }
   }
 
-  Future<void> refresh() async {}
+  Future<void> refresh() async {
+    await init();
+  }
 }

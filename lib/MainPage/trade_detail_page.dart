@@ -182,18 +182,88 @@ class _TradeDetailPageState extends State<TradeDetailPage> {
                                         },
                                       ),
                                     ),
-                                    SizedBox(
-                                      child: Text(
-                                        tradeDetailPageController.isYesDiagram
-                                            ? "${(tradeDetailPageController.yesBaseProbability * 100).toStringAsFixed(0)}%"
-                                            : "${(tradeDetailPageController.noBaseProbability * 100).toStringAsFixed(0)}%",
-                                        style: TextStyle(
-                                            color: Color(0xFF5596FF),
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                            fontStyle: FontStyle.italic),
-                                      ),
-                                    )
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        SizedBox(
+                                          child: Text(
+                                            tradeDetailPageController
+                                                    .isYesDiagram
+                                                ? "${(tradeDetailPageController.yesBaseProbability * 100).toStringAsFixed(0)}%"
+                                                : "${(tradeDetailPageController.noBaseProbability * 100).toStringAsFixed(0)}%",
+                                            style: TextStyle(
+                                                color: Color(0xFF5596FF),
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold,
+                                                fontStyle: FontStyle.italic),
+                                          ),
+                                        ),
+                                        if (tradeDetailPageController
+                                            .isYesDiagram)
+                                          SizedBox(
+                                              child: tradeDetailPageController
+                                                      .deltaYesProbability
+                                                      .isNegative
+                                                  ? Icon(
+                                                      Icons.arrow_downward,
+                                                      color: Colors.green,
+                                                      size: 16,
+                                                    )
+                                                  : Icon(
+                                                      Icons.arrow_upward,
+                                                      color: Colors.red,
+                                                      size: 16,
+                                                      
+                                                    )),
+                                        if (!tradeDetailPageController
+                                            .isYesDiagram)
+                                          SizedBox(
+                                              child: tradeDetailPageController
+                                                      .deltaNoProbability
+                                                      .isNegative
+                                                  ? Icon(
+                                                      Icons.arrow_downward,
+                                                      color: Colors.green,
+                                                      size: 16,
+                                                    )
+                                                  : Icon(
+                                                      Icons.arrow_upward,
+                                                      color: Colors.red,
+                                                      size: 16,
+                                                    )),
+                                        SizedBox(
+                                          child: tradeDetailPageController
+                                                  .isYesDiagram
+                                              ? Text(
+                                                  "${(tradeDetailPageController.deltaYesProbability.abs() * 100).toStringAsFixed(0)}%",
+                                                  style: TextStyle(
+                                                      color: tradeDetailPageController
+                                                              .deltaYesProbability
+                                                              .isNegative
+                                                          ? Colors.green
+                                                          : Colors.red,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 16),
+                                                )
+                                              : Text(
+                                                  "${(tradeDetailPageController.deltaNoProbability.abs() * 100).toStringAsFixed(0)}%",
+                                                  style: TextStyle(
+                                                      color: tradeDetailPageController
+                                                              .deltaNoProbability
+                                                              .isNegative
+                                                          ? Colors.green
+                                                          : Colors.red,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 16),
+                                                ),
+                                        )
+                                      ],
+                                    ),
                                   ]),
                               SizedBox(
                                 height: 10.0,
@@ -224,12 +294,18 @@ class _TradeDetailPageState extends State<TradeDetailPage> {
                                                       transactionData:
                                                           tradeDetailPageController
                                                               .yesTransactions,
-                                                      baseProbability: tradeDetailPageController.yesBaseProbability,)
+                                                      baseProbability:
+                                                          tradeDetailPageController
+                                                              .yesBaseProbability,
+                                                    )
                                                   : YesNoDiagram(
                                                       transactionData:
                                                           tradeDetailPageController
                                                               .noTransactions,
-                                                      baseProbability: tradeDetailPageController.noBaseProbability,),
+                                                      baseProbability:
+                                                          tradeDetailPageController
+                                                              .noBaseProbability,
+                                                    ),
                                         ),
                                         SizedBox(
                                           height: 10,
@@ -1145,6 +1221,8 @@ class YesNoDiagram extends StatelessWidget {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
+              minIncluded: false,
+              maxIncluded: false,
               interval: timeInterval.toDouble(),
               reservedSize: 40,
               getTitlesWidget: (value, meta) {
