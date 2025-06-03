@@ -419,15 +419,14 @@ class _PositionCardState extends State<PositionCard> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        final int? addBalance = await Navigator.of(context)
+        final addBalance = await Navigator.of(context)
             .pushNamed(RouteMap.tradeDetailPage, arguments: (
           widget.event.marketAddress,
           widget.event.yesShares,
           widget.event.noShares
         ));
         if (addBalance != null) {
-          widget.walletPageController
-              .updateBalance(widget.walletPageController.balance + addBalance);
+          widget.walletPageController.init();
         }
       },
       child: Container(

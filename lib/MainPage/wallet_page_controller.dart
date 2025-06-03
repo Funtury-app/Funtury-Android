@@ -71,6 +71,7 @@ class WalletPageController {
     try {
       final result = await ganacheService.queryAllMarkets();
 
+      userPosition.clear();
       for (var data in result) {
         WalletEvent event = WalletEvent.fromData(data);
         final position =
@@ -108,13 +109,14 @@ class WalletPageController {
           method: RequestMethod.get,
           path: UserPath.getUserTransactions,
           pathMid: [GanacheService.userAddress.hexEip55]);
-
+      
       if (result["status"] == "error") {
         throw Exception(result["data"]["message"]);
       } else if (result["status"] == "failed") {
         throw Exception(result["data"]["message"]);
       } else if (result["status"] == "success") {
         final data = result["data"] as List<dynamic>;
+        userOrderHistory.clear();
         for (var item in data) {
           UserTransferRecord record = UserTransferRecord.fromData(item as Map<String, dynamic>);
           userOrderHistory.add(record);

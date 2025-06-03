@@ -680,7 +680,7 @@ class _TradeDetailPageState extends State<TradeDetailPage> {
                                                                   0.25),
                                                         ),
                                                         BoxShadow(
-                                                          color: Colors.white,
+                                                          color: tradeDetailPageController.eventDetail.marketState == MarketState.preorder ? Colors.grey : Colors.white,
                                                           spreadRadius: -1.0,
                                                           blurRadius: 3.0,
                                                         )
@@ -1221,7 +1221,7 @@ class YesNoDiagram extends StatelessWidget {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              minIncluded: false,
+              minIncluded: true,
               maxIncluded: false,
               interval: timeInterval.toDouble(),
               reservedSize: 40,

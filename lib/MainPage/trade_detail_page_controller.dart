@@ -263,7 +263,8 @@ class TradeDetailPageController {
     if (context.mounted) {
       setState(() {
         if (yesTransactions.isNotEmpty) {
-          deltaYesProbability = yesTransactions.last.perPrice - yesBaseProbability;
+          deltaYesProbability =
+              yesTransactions.last.perPrice - yesBaseProbability;
         }
         if (noTransactions.isNotEmpty) {
           deltaNoProbability = noTransactions.last.perPrice - noBaseProbability;
@@ -632,9 +633,7 @@ class TradeDetailPageController {
                   actions: [
                     TextButton(
                       onPressed: () {
-                        Navigator.of(context).pop(eventDetail.resolvedToYes
-                            ? userYesPosition
-                            : userNoPosition);
+                        Navigator.of(context).pop();
                       },
                       child: const Text("OK"),
                     ),
@@ -642,7 +641,8 @@ class TradeDetailPageController {
                 );
               });
           if (context.mounted) {
-            Navigator.of(context).pop();
+            Navigator.of(context).pop(
+                eventDetail.resolvedToYes ? userYesPosition : userNoPosition);
           }
         } else {
           if (result.$2 == "Already claimed") {
