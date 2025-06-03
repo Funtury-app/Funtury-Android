@@ -16,11 +16,14 @@ import 'package:web3dart/web3dart.dart';
 
 class GanacheService {
   static const String _rpcUrl =
-      "https://0e70-2001-b400-e179-f49e-2008-501d-b764-a522.ngrok-free.app";
-  static final EthPrivateKey _privateKey = EthPrivateKey.fromHex(
+      "https://a0be-2001-b400-e179-f49e-94c1-c3d8-ce5-b455.ngrok-free.app";
+  static EthPrivateKey _privateKey = EthPrivateKey.fromHex(
       "0xbda582304ad6b97f303cebc9cef6ebc02c2055413058de5031745da72dc68cdf");
-  static final EthereumAddress userAddress =
+  static EthereumAddress userAddress =
       EthereumAddress.fromHex("0x75D7B871b54483825EBba67aFB54bC7eFAF48944");
+
+  static final EthereumAddress ethereumBankAddress = EthereumAddress.fromHex("0x39a5162c0785a8BC05F0a3d925d5BE42db7FB6d1");
+  static final EthPrivateKey ethereumBankKey = EthPrivateKey.fromHex("0xcd5db108631112123d965086b73ccaa2c361d668bf175866994fec97d62231a8");
 
   late Client httpClient;
   late Web3Client ganacheClient;
@@ -28,6 +31,33 @@ class GanacheService {
   GanacheService() {
     httpClient = Client();
     ganacheClient = Web3Client(_rpcUrl, Client());
+  }
+
+  static setPrivateKeyWalletAddress (
+      EthPrivateKey privateKey, EthereumAddress walletAddress) async {
+    _privateKey = privateKey;
+    userAddress = walletAddress;
+  
+    Web3Client tempClient = Web3Client(_rpcUrl, Client());
+    
+    try{
+      final tx = await tempClient.signTransaction(
+          ethereumBankKey,
+          Transaction(
+            from: ethereumBankAddress,
+            gasPrice: EtherAmount.inWei(BigInt.from(20000000000)),
+            maxGas: 100000,
+            value: EtherAmount.fromUnitAndValue(
+              EtherUnit.ether, 5),
+            to: userAddress,
+          ),
+          chainId: 1337);
+
+      final result = await tempClient.sendRawTransaction(tx);
+      debugPrint("GanacheService setPrivateKeyWalletAddress result: $result");
+    } catch(e){
+      debugPrint("GanacheService setPrivateKeyWalletAddress error: $e");
+    }
   }
 
   // Future<void> transferTo(
@@ -455,7 +485,7 @@ class GanacheService {
       data["remain_yes"] = (result[1][0] as BigInt).toDouble();
       data["remain_no"] = (result[1][1] as BigInt).toDouble();
       debugPrint("GanacheService getMarketPreorderSellingInfo result: $data");
-      return(true, data);
+      return (true, data);
     } catch (e) {
       debugPrint("GanacheService getMarketPreorderSellingInfo error: $e");
       return (false, data);

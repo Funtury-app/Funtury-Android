@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:funtury/Data/user_transfer_record.dart';
 import 'package:funtury/Data/wallet_event.dart';
 import 'package:funtury/MainPage/wallet_page_controller.dart';
@@ -83,15 +84,71 @@ class _WalletPageState extends State<WalletPage> {
                             ? CircularProgressIndicator(
                                 color: Colors.white,
                               )
-                            : Text(
-                                "Balance\nF ${walletPageController.balance.toStringAsFixed(2)}",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 24,
+                            : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Balance\nF ${walletPageController.balance.toStringAsFixed(2)}",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 24,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                textAlign: TextAlign.center,
-                              ),
+                                GestureDetector(
+                                  onTap: (){
+                                    //copy
+                                    Clipboard.setData(ClipboardData(text: GanacheService.userAddress.hexEip55));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text("Wallet Address Copied"),
+                                        duration: Duration(seconds: 2),
+                                      ),
+                                    );
+                                  },
+                                  onLongPress: (){
+                                    //copy
+                                    Clipboard.setData(ClipboardData(text: GanacheService.userAddress.hexEip55));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text("Wallet Address Copied"),
+                                        duration: Duration(seconds: 2),
+                                      ),
+                                    );
+                                  },
+                                  child: SizedBox(
+                                      width: 260,
+                                      height: 18,
+                                      child: Row(
+                                        children: [
+                                          SizedBox(
+                                            height: 18,
+                                            width: 250,
+                                              child: Text(
+                                                  GanacheService
+                                                      .userAddress.hexEip55,
+                                                  style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      decoration: TextDecoration
+                                                          .underline,
+                                                          decorationColor: Colors.white),
+                                                  textAlign: TextAlign.center,
+                                                  overflow:
+                                                      TextOverflow.ellipsis)),
+                                          SizedBox(
+                                            width: 10,
+                                            child: Icon(Icons.copy,
+                                                color: Colors.white,
+                                                size: 16),
+                                          )
+                                        ],
+                                      )),
+                                ),
+                              ]),
                       ),
                       SizedBox(
                         height: 10,
