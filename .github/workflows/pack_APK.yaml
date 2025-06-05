@@ -1,8 +1,7 @@
-name: Build and Sign Flutter APKs
+name: Build Flutter APKs
 
 on:
   push:
-    # branches: ["main"]
     tags:
       - '*'
 
@@ -14,50 +13,35 @@ jobs:
 
     steps:
       # Checkout the repository
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 確保可以訪問所有標籤
+          fetch-depth: 0
 
       # Set up Flutter
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.3'
+          flutter-version: '3.27.4'
           channel: 'stable'
+          cache: true
 
       # Run flutter doctor
       - run: flutter doctor -v
-      
-      #Checkout the repository code and get packages
-      - name: Checkout code and get packages
-        uses: actions/checkout@v3
 
       # Install dependencies
-      - run: flutter pub get
+      - name: Install dependencies
+        run: flutter pub get
 
-      # Decode and save the JKS file
-      - name: Decode and save JKS file
-        run: |
-          echo "${{ secrets.JKS_KEY }}" | base64 --decode > android/app/release-key.jks
-
-      # Add key.properties file
-      - name: Configure key.properties
-        run: |
-          echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> android/key.properties
-          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
-          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
-          echo "storeFile=release-key.jks" >> android/key.properties
-      # echo "storeFile=android/app/release-key.jks" >> android/key.properties
-
-      # Build signed APK
-      - name: Build signed APK
+      # Build unsigned APK
+      - name: Build unsigned APK
         run: flutter build apk --split-per-abi --release
 
-      # Build signed App Bundle
-      - name: Build signed App Bundle
+      # Build unsigned App Bundle
+      - name: Build unsigned App Bundle
         run: flutter build appbundle --release
 
+      # Create GitHub Release
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             build/app/outputs/apk/release/*-release.apk
@@ -67,10 +51,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Upload artifacts
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release-artifacts
           path: |
             build/app/outputs/apk/release/*-release.apk
             build/app/outputs/bundle/release/app-release.aab
+          retention-days: 7
