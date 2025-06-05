@@ -6,7 +6,7 @@ import "package:http/http.dart" as http;
 import "dart:convert";
 
 class Network {
-  static const baseUrl = "131b-120-126-194-246.ngrok-free.app";
+  static const baseUrl = "9212-120-126-194-241.ngrok-free.app";
   static Network manager = Network();
 
   Future<Map> sendRequest({
