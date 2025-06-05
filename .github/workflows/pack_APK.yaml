@@ -1,0 +1,76 @@
+name: Build and Sign Flutter APKs
+
+on:
+  push:
+    # branches: ["main"]
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      # Checkout the repository
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # 確保可以訪問所有標籤
+
+      # Set up Flutter
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.3'
+          channel: 'stable'
+
+      # Run flutter doctor
+      - run: flutter doctor -v
+      
+      #Checkout the repository code and get packages
+      - name: Checkout code and get packages
+        uses: actions/checkout@v3
+
+      # Install dependencies
+      - run: flutter pub get
+
+      # Decode and save the JKS file
+      - name: Decode and save JKS file
+        run: |
+          echo "${{ secrets.JKS_KEY }}" | base64 --decode > android/app/release-key.jks
+
+      # Add key.properties file
+      - name: Configure key.properties
+        run: |
+          echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+          echo "storeFile=release-key.jks" >> android/key.properties
+      # echo "storeFile=android/app/release-key.jks" >> android/key.properties
+
+      # Build signed APK
+      - name: Build signed APK
+        run: flutter build apk --split-per-abi --release
+
+      # Build signed App Bundle
+      - name: Build signed App Bundle
+        run: flutter build appbundle --release
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build/app/outputs/apk/release/*-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-artifacts
+          path: |
+            build/app/outputs/apk/release/*-release.apk
+            build/app/outputs/bundle/release/app-release.aab
