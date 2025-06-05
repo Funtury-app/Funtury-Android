@@ -1,7 +1,7 @@
 // import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:funtury/Service/Contract/Funtury_contract.dart';
+import 'package:funtury/Service/Contract/funtury_contract.dart';
 import 'package:funtury/Service/Contract/prediction_market_contract.dart';
 // import 'package:funtury/Service/Contract/contract_abi_json.dart';
 // import 'package:funtury/Service/Contract/contract_address.dart';
